@@ -17,6 +17,7 @@ import java.util.List;
 
 import xie.com.netmdeiaplayer.fragments.AudioFragment;
 import xie.com.netmdeiaplayer.fragments.BaseFragment;
+import xie.com.netmdeiaplayer.fragments.FragmentFactory;
 import xie.com.netmdeiaplayer.fragments.NetAudioFragment;
 import xie.com.netmdeiaplayer.fragments.NetVideoFragment;
 import xie.com.netmdeiaplayer.fragments.VideoFragment;
@@ -59,19 +60,35 @@ public class MainActivity extends AppCompatActivity {
         vp.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
-                return fragments.get(position);
+                return FragmentFactory.createFragment(position);
             }
 
             @Override
             public int getCount() {
-                return fragments.size();
+                return 4;
             }
         });
 
         vg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
-                vp.setCurrentItem(i);
+                int id = radioGroup.getCheckedRadioButtonId();
+                switch (id) {
+                    case R.id.rd1:
+                        vp.setCurrentItem(0);
+                        break;
+                    case R.id.rd2:
+                        vp.setCurrentItem(1);
+                        break;
+                    case R.id.rd3:
+                        vp.setCurrentItem(2);
+                        break;
+                    case R.id.rd4:
+                        vp.setCurrentItem(3);
+                        break;
+                }
+
+//                vp.setCurrentItem(i);
             }
         });
 

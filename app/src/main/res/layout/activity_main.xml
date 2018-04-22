@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     tools:context="xie.com.netmdeiaplayer.MainActivity">
 
+    <include layout="@layout/titlebar"/>
     <android.support.v4.view.ViewPager
         android:id="@+id/vp"
         android:layout_width="match_parent"
