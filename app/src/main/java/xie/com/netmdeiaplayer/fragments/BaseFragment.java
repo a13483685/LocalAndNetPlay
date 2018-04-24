@@ -1,5 +1,6 @@
 package xie.com.netmdeiaplayer.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -8,21 +9,29 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import xie.com.netmdeiaplayer.MyApplication;
+
 /**
  * Created by MACHENIKE on 2018/4/22.
  */
 
 public abstract class BaseFragment extends Fragment {
     int res;
-    Context ctx;
+    Activity activity;
 
-    public BaseFragment(){
-
+    public Context getContext()
+    {
+        if(activity == null)
+        {
+            return MyApplication.getInstance();
+        }
+        return activity;
     }
 
-    public BaseFragment(Context ctx, int res) {
-        this.res = res;
-        this.ctx = ctx;
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        activity = getActivity();
     }
 
     @Nullable
