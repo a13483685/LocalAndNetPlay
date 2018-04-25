@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import xie.com.netmdeiaplayer.R;
+import xie.com.netmdeiaplayer.activities.VideoPlayAvtivity;
 import xie.com.netmdeiaplayer.adapters.VideoAdapter;
 import xie.com.netmdeiaplayer.domain.MediaItem;
 
@@ -74,8 +75,13 @@ public class VideoFragment extends BaseFragment {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
             MediaItem item = mediaItems.get(i);
-            //调取播放器
-            Intent intent = new Intent();
+            //调取手机上的播放器
+//            Intent intent = new Intent();
+//            intent.setDataAndType(Uri.parse(item.getData()),"video/*");
+//            getContext().startActivity(intent);
+
+            //调用系统的音乐播放器
+            Intent intent = new Intent(getContext(), VideoPlayAvtivity.class);
             intent.setDataAndType(Uri.parse(item.getData()),"video/*");
             getContext().startActivity(intent);
         }
