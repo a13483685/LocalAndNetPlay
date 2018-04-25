@@ -1,26 +1,24 @@
 package xie.com.netmdeiaplayer.fragments;
 
-import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Handler;
 
 import xie.com.netmdeiaplayer.R;
+import xie.com.netmdeiaplayer.adapters.VideoAdapter;
 import xie.com.netmdeiaplayer.domain.MediaItem;
 
 /**
@@ -41,7 +39,7 @@ public class VideoFragment extends BaseFragment {
             {
                 //有数据设置适配器
                 //隐藏文本
-                lv_video.setAdapter(new VideoAdapter());
+                lv_video.setAdapter(new VideoAdapter(getContext(),mediaItems));
                 tv_content.setVisibility(View.GONE);
 
             }else {
@@ -67,13 +65,23 @@ public class VideoFragment extends BaseFragment {
         lv_video = view.findViewById(R.id.lv_video);
         pb = view.findViewById(R.id.pb);
         tv_content = view.findViewById(R.id.tv_no_content);
+        lv_video.setOnItemClickListener(new ItemClickLisener());
         return view;
     }
 
+    class ItemClickLisener implements AdapterView.OnItemClickListener {
+
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+            MediaItem item = mediaItems.get(i);
+            //调取播放器
+            Intent intent = new Intent();
+            intent.setDataAndType(Uri.parse(item.getData()),"video/*");
+            getContext().startActivity(intent);
+        }
+    }
     public void getLocalVideoData() {
         new Thread() {
-
-
             @Override
             public void run() {
                 super.run();
@@ -84,7 +92,7 @@ public class VideoFragment extends BaseFragment {
                         MediaStore.Video.Media.DISPLAY_NAME,//视频文件在sdcard中的名称
                         MediaStore.Video.Media.DURATION,//时长
                         MediaStore.Video.Media.SIZE,//大小
-                        MediaStore.Video.Media.DATA,//时间
+                        MediaStore.Video.Media.DATA,//数据
                         MediaStore.Video.Media.ARTIST//作者
                 };
                 Cursor cursor  = resolver.query(uri, obj, null, null, null);
@@ -118,53 +126,8 @@ public class VideoFragment extends BaseFragment {
         }.start();
 
     }
-    class VideoAdapter extends BaseAdapter{
-
-        @Override
-        public int getCount() {
-            return mediaItems.size();
-        }
-
-        @Override
-        public Object getItem(int i) {
-            return null;
-        }
-
-        @Override
-        public long getItemId(int i) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
-            ViewHolder holder  ;
-            if (view == null){
-                view = View.inflate(getContext(),R.layout.item_video,null);
-                holder = new ViewHolder();
-                holder.iv_icon = (ImageView) view.findViewById(R.id.im_play);
-                holder.tv_name = (TextView) view.findViewById(R.id.tv_name);
-                holder.tv_time = (TextView) view.findViewById(R.id.tv_time);
-                holder.tv_size = (TextView) view.findViewById(R.id.tv_size);
-                view.setTag(holder);
-            }else {
-                holder = (ViewHolder) view.getTag();
-            }
-
-            MediaItem item = mediaItems.get(i);
-            holder.tv_name.setText(item.getName());
-            holder.tv_time.setText(String.valueOf(item.getDuration()));
-            holder.tv_size.setText(String.valueOf(item.getSize()));
-            return view;
-        }
-    }
 
 
-    static class ViewHolder
-    {
-        ImageView iv_icon;
-        TextView tv_name;
-        TextView tv_time;
-        TextView tv_size;
-    }
+
 
 }
