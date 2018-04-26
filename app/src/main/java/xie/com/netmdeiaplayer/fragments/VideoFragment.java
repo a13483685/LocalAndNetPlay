@@ -1,12 +1,17 @@
 package xie.com.netmdeiaplayer.fragments;
 
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -31,6 +36,10 @@ public class VideoFragment extends BaseFragment {
     private ProgressBar pb;
     private TextView tv_content;
     private Context context;
+
+
+    private static final int PERMISSION_REQUESTCODE = 1;
+
     private List<MediaItem> mediaItems = new ArrayList<>();
     private android.os.Handler mHandler = new android.os.Handler(){
         @Override
@@ -50,6 +59,14 @@ public class VideoFragment extends BaseFragment {
         }
     };
 
+    private void permission() {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            //没有授权
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUESTCODE);
+        }
+    }
+
+
 
 //    public VideoFragment(Context ctx) {
 //        this.context = ctx;
@@ -57,6 +74,9 @@ public class VideoFragment extends BaseFragment {
 
     @Override
     protected void initData() {
+        if(Build.VERSION.SDK_INT >=Build.VERSION_CODES.M){
+            permission();//动态权限认证
+        }
         getLocalVideoData();
     }
 
@@ -69,6 +89,7 @@ public class VideoFragment extends BaseFragment {
         lv_video.setOnItemClickListener(new ItemClickLisener());
         return view;
     }
+
 
     class ItemClickLisener implements AdapterView.OnItemClickListener {
 
@@ -132,6 +153,7 @@ public class VideoFragment extends BaseFragment {
         }.start();
 
     }
+
 
 
 
