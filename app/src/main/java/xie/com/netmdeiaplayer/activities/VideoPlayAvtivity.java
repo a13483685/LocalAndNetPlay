@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -71,6 +73,8 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
     @BindView(R.id.sb_play_percent)
     SeekBar sbPlayPercent;
 
+    private GestureDetector gestureDetector;
+
     private ArrayList<MediaItem> mVideoItems;
 
     private Handler handler = new Handler() {
@@ -110,6 +114,33 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
         IntentFilter mIntentFilter = new IntentFilter();
         mIntentFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(myBroadCastRec, mIntentFilter);
+        gestureDetector = new GestureDetector(new GestureDetector.SimpleOnGestureListener(){
+
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+//                Toast.makeText(VideoPlayAvtivity.this,"我被单击了",Toast.LENGTH_LONG).show();
+                return super.onSingleTapConfirmed(e);
+//                stopAndPlay();
+            }
+
+            @Override
+            public void onLongPress(MotionEvent e) {
+                Toast.makeText(VideoPlayAvtivity.this,"我被长按了",Toast.LENGTH_LONG).show();
+                super.onLongPress(e);
+            }
+
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                Toast.makeText(VideoPlayAvtivity.this,"我被双击了",Toast.LENGTH_LONG).show();
+                return super.onDoubleTap(e);
+            }
+
+            @Override
+            public boolean onDoubleTapEvent(MotionEvent e) {
+                Toast.makeText(VideoPlayAvtivity.this,"222",Toast.LENGTH_LONG).show();
+                return super.onDoubleTapEvent(e);
+            }
+        });
     }
 
     public void setBattery(int battery) {
@@ -247,12 +278,16 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
             case R.id.iv_back:
                 break;
             case R.id.stop_pluse:
-                if (mVideoView.isPlaying()) {
-                    mVideoView.pause();
-                } else {
-                    mVideoView.start();
-                }
+                stopAndPlay();
                 break;
+        }
+    }
+
+    private void stopAndPlay() {
+        if (mVideoView.isPlaying()) {
+            mVideoView.pause();
+        } else {
+            mVideoView.start();
         }
     }
 
@@ -280,5 +315,11 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
             mVideoView.setVideoPath(item.getData());
             mTitleName.setText(item.getName());
         }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        gestureDetector.onTouchEvent(event);
+        return super.onTouchEvent(event);
     }
 }
