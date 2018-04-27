@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import butterknife.BindView;  
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import xie.com.netmdeiaplayer.R;
 import xie.com.netmdeiaplayer.domain.MediaItem;
@@ -157,7 +157,7 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
     private void getData() {
         mVideoItems = (ArrayList<MediaItem>) getIntent().getSerializableExtra("videoList");
         position = getIntent().getIntExtra("position",0);
-        if (mVideoItems!=null && mVideoItems.size()>0){
+        if (mVideoItems !=null && mVideoItems.size()>0){
             item = mVideoItems.get(position);
             mTitleName.setText(item.getName());
             mVideoView.setVideoPath(item.getData());
@@ -204,6 +204,7 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
 
         @Override
         public void onCompletion(MediaPlayer mediaPlayer) {
+            playNextVideo();
         }
     }
 
@@ -238,8 +239,10 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
             case R.id.iv_info:
                 break;
             case R.id.pre:
+                playPreVideo();
                 break;
             case R.id.next:
+                playNextVideo();
                 break;
             case R.id.iv_back:
                 break;
@@ -250,6 +253,32 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
                     mVideoView.start();
                 }
                 break;
+        }
+    }
+
+    private void playPreVideo() {
+        if(position>0)
+        {
+            position--;
+        }
+        if(mVideoItems!=null&&mVideoItems.size()>0)
+        {
+            MediaItem item = mVideoItems.get(position);
+            mVideoView.setVideoPath(item.getData());
+            mTitleName.setText(item.getName());
+        }
+    }
+
+    private void playNextVideo() {
+        if(position<mVideoItems.size())
+        {
+            position++;
+        }
+        if(mVideoItems!=null&&mVideoItems.size()>0)
+        {
+            MediaItem item = mVideoItems.get(position);
+            mVideoView.setVideoPath(item.getData());
+            mTitleName.setText(item.getName());
         }
     }
 }
