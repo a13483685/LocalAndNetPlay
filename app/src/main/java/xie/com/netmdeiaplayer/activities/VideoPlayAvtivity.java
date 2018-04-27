@@ -17,14 +17,19 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
-import butterknife.BindView;
+import butterknife.BindView;  
 import butterknife.ButterKnife;
 import xie.com.netmdeiaplayer.R;
+import xie.com.netmdeiaplayer.domain.MediaItem;
 
 
 /**
@@ -66,6 +71,7 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
     @BindView(R.id.sb_play_percent)
     SeekBar sbPlayPercent;
 
+    private ArrayList<MediaItem> mVideoItems;
 
     private Handler handler = new Handler() {
         @Override
@@ -84,6 +90,8 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
             }
         }
     };
+    private int position;
+    private MediaItem item;
 
     private String getSystemTime() {
         SimpleDateFormat format = new SimpleDateFormat("hh:mm:ss");
@@ -142,10 +150,24 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
         uri = getIntent().getData();
         mVideoView = findViewById(R.id.video_player);
 
-        if (uri != null) {
-            mVideoView.setVideoURI(uri);
-        }
+        getData();
         setListener();
+    }
+
+    private void getData() {
+        mVideoItems = (ArrayList<MediaItem>) getIntent().getSerializableExtra("videoList");
+        position = getIntent().getIntExtra("position",0);
+        if (mVideoItems!=null && mVideoItems.size()>0){
+            item = mVideoItems.get(position);
+            mTitleName.setText(item.getName());
+            mVideoView.setVideoPath(item.getData());
+        }else if (uri != null) {
+            mTitleName.setText(item.getName());
+
+            mVideoView.setVideoURI(uri);
+        }else {
+            Toast.makeText(VideoPlayAvtivity.this,"数据为空",Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setListener() {

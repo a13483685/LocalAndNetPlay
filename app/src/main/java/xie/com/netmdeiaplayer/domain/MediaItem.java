@@ -1,10 +1,12 @@
 package xie.com.netmdeiaplayer.domain;
 
+import java.io.Serializable;
+
 /**
  * Created by MACHENIKE on 2018/4/23.
  */
 
-public class MediaItem {
+public class MediaItem implements Serializable{
     String name ;
     Long duration ;
     Long size ;

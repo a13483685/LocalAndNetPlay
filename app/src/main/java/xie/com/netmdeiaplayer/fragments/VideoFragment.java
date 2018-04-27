@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
@@ -19,6 +20,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,6 +106,10 @@ public class VideoFragment extends BaseFragment {
             //调用系统的音乐播放器
             Intent intent = new Intent(getContext(), VideoPlayAvtivity.class);
             intent.setDataAndType(Uri.parse(item.getData()),"video/*");
+            Bundle mBundle = new Bundle();
+            mBundle.putSerializable("videoList", (Serializable) mediaItems);
+            intent.putExtras(mBundle);
+            intent.putExtra("position",i);
             getContext().startActivity(intent);
         }
     }
