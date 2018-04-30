@@ -11,27 +11,27 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
+import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import xie.com.netmdeiaplayer.R;
 import xie.com.netmdeiaplayer.domain.MediaItem;
+import xie.com.netmdeiaplayer.view.VideoView;
 
 
 /**
@@ -39,6 +39,9 @@ import xie.com.netmdeiaplayer.domain.MediaItem;
  */
 
 public class VideoPlayAvtivity extends Activity implements View.OnClickListener {
+    private static final int PRORESS = 1;
+    private static final int HIDE_CONTROLLER_MSG = 2;
+
     public VideoView mVideoView;
     @BindView(R.id.buttry_level)
     ImageView buttryLevel;
@@ -46,7 +49,6 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
     TextView tvTime;
     private MyBroadCastRec myBroadCastRec;
     Uri uri;
-    private static final int PRORESS = 1;
     @BindView(R.id.video_name)
     public TextView mTitleName;
 
@@ -68,14 +70,28 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
     @BindView(R.id.stop_pluse)
     public ImageView mStopPluse;
 
+    @BindView(R.id.full)
+    public ImageView mFullScreen;
+
     @BindView(R.id.sb_voice)
     SeekBar sbVoice;
     @BindView(R.id.sb_play_percent)
     SeekBar sbPlayPercent;
 
+    @BindView(R.id.control_laytout)
+    public RelativeLayout mMediaContorllerLayout;
+
     private GestureDetector gestureDetector;
 
     private ArrayList<MediaItem> mVideoItems;
+
+    private int position;
+    private MediaItem item;
+    private boolean isContorllerShown;
+    private boolean isFullScreem = false;
+    private int screemHeight;
+    private int screemWidth;
+
 
     private Handler handler = new Handler() {
         @Override
@@ -91,11 +107,15 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
                     handler.removeMessages(PRORESS);
                     handler.sendEmptyMessageDelayed(PRORESS, 1000);
                     break;
+
+                case HIDE_CONTROLLER_MSG:
+                    hideMediaContorller();
             }
         }
     };
-    private int position;
-    private MediaItem item;
+    private int mDefaultHeight;
+    private int mDefaultWidth;
+    private DisplayMetrics dm;
 
     private String getSystemTime() {
         SimpleDateFormat format = new SimpleDateFormat("hh:mm:ss");
@@ -108,7 +128,15 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
         initView();
         initData();
     }
+    private void showMediaContorller(){
+        mMediaContorllerLayout.setVisibility(View.VISIBLE);
+        isContorllerShown = true;
+    }
 
+    private void hideMediaContorller() {
+        mMediaContorllerLayout.setVisibility(View.GONE);
+        isContorllerShown = false;
+    }
     private void initData() {
         myBroadCastRec = new MyBroadCastRec();
         IntentFilter mIntentFilter = new IntentFilter();
@@ -119,9 +147,19 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
             @Override
             public boolean onSingleTapConfirmed(MotionEvent e) {
 //                Toast.makeText(VideoPlayAvtivity.this,"我被单击了",Toast.LENGTH_LONG).show();
+                if(!isContorllerShown)
+                {
+                    showMediaContorller();
+                    handler.sendEmptyMessageDelayed(HIDE_CONTROLLER_MSG,4000);
+                }else {
+                    hideMediaContorller();
+                    handler.removeMessages(HIDE_CONTROLLER_MSG);
+                }
+
                 return super.onSingleTapConfirmed(e);
 //                stopAndPlay();
             }
+
 
             @Override
             public void onLongPress(MotionEvent e) {
@@ -132,15 +170,57 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
             @Override
             public boolean onDoubleTap(MotionEvent e) {
                 Toast.makeText(VideoPlayAvtivity.this,"我被双击了",Toast.LENGTH_LONG).show();
+                fullScrenAndDefault();
                 return super.onDoubleTap(e);
             }
 
-            @Override
-            public boolean onDoubleTapEvent(MotionEvent e) {
-                Toast.makeText(VideoPlayAvtivity.this,"222",Toast.LENGTH_LONG).show();
-                return super.onDoubleTapEvent(e);
-            }
+//            @Override
+//            public boolean onDoubleTapEvent(MotionEvent e) {
+//                Toast.makeText(VideoPlayAvtivity.this,"222",Toast.LENGTH_LONG).show();
+//                return super.onDoubleTapEvent(e);
+//            }
         });
+
+        dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+    }
+
+    private void fullScrenAndDefault() {
+        if(!isFullScreem){
+            isFullScreem = true;
+            setFullScreem();
+        }else {
+            isFullScreem = false;
+            setDefaulScreem();
+        }
+    }
+
+    private void setFullScreem() {
+        screemHeight = dm.heightPixels;
+        screemWidth = dm.widthPixels;
+//        DisplayMetrics dm = new DisplayMetrics();
+        mVideoView.setSize(screemHeight,screemWidth);
+    }
+
+//           if ( mVideoWidth * height  < width * mVideoHeight ) {
+//        //Log.i("@@@", "image too wide, correcting");
+//        width = height * mVideoWidth / mVideoHeight;
+//    } else if ( mVideoWidth * height  > width * mVideoHeight ) {
+//        //Log.i("@@@", "image too tall, correcting");
+//        height = width * mVideoHeight / mVideoWidth;
+ //   }
+
+    private void setDefaulScreem() {
+        // for compatibility, we adjust size based on aspect ratio
+        if ( mDefaultWidth * screemHeight  < screemWidth * mDefaultHeight ) {
+            //Log.i("@@@", "image too wide, correcting");
+            screemWidth = screemHeight * mDefaultWidth / mDefaultHeight;
+        } else if ( mDefaultWidth * screemHeight  > screemWidth * mDefaultHeight ) {
+            //Log.i("@@@", "image too tall, correcting");
+            screemHeight = screemWidth * mDefaultHeight / mDefaultWidth;
+        }
+        mVideoView.setSize(screemHeight,screemWidth);
     }
 
     public void setBattery(int battery) {
@@ -194,7 +274,6 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
             mVideoView.setVideoPath(item.getData());
         }else if (uri != null) {
             mTitleName.setText(item.getName());
-
             mVideoView.setVideoURI(uri);
         }else {
             Toast.makeText(VideoPlayAvtivity.this,"数据为空",Toast.LENGTH_SHORT).show();
@@ -210,6 +289,7 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
         next.setOnClickListener(this);
         mBack.setOnClickListener(this);
         mStopPluse.setOnClickListener(this);
+        mFullScreen.setOnClickListener(this);
         sbPlayPercent.setOnSeekBarChangeListener(new SeekBarListener());
     }
 
@@ -245,9 +325,13 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
         public void onPrepared(MediaPlayer mediaPlayer) {
             mVideoView.start();
             //1.获得总时长
+
             int duration = mVideoView.getDuration();
             sbPlayPercent.setMax(duration);
             handler.sendEmptyMessage(PRORESS);
+            mDefaultHeight = mediaPlayer.getVideoHeight();
+            mDefaultWidth = mediaPlayer.getVideoWidth();
+            mVideoView.setSize(mDefaultHeight,mDefaultWidth);
         }
     }
 
@@ -276,11 +360,17 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
                 playNextVideo();
                 break;
             case R.id.iv_back:
+                finish();
                 break;
             case R.id.stop_pluse:
                 stopAndPlay();
                 break;
+            case R.id.full:
+                fullScrenAndDefault();
+                break;
         }
+        handler.removeMessages(HIDE_CONTROLLER_MSG);
+        handler.sendEmptyMessageDelayed(HIDE_CONTROLLER_MSG,4000);
     }
 
     private void stopAndPlay() {
