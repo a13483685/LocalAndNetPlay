@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -52,7 +54,7 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
     @BindView(R.id.video_name)
     public TextView mTitleName;
 
-    @BindView(R.id.iv_voice)
+    @BindView(R.id.iv_mut)
     public ImageView mVoice;
 
     @BindView(R.id.iv_info)
@@ -116,6 +118,9 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
     private int mDefaultHeight;
     private int mDefaultWidth;
     private DisplayMetrics dm;
+    private AudioManager am;
+    private boolean isMut = false;
+    private int currentVol;
 
     private String getSystemTime() {
         SimpleDateFormat format = new SimpleDateFormat("hh:mm:ss");
@@ -183,6 +188,8 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
 
         dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
+        screemHeight = dm.heightPixels;
+        screemWidth = dm.widthPixels;
 
     }
 
@@ -197,8 +204,7 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
     }
 
     private void setFullScreem() {
-        screemHeight = dm.heightPixels;
-        screemWidth = dm.widthPixels;
+
 //        DisplayMetrics dm = new DisplayMetrics();
         mVideoView.setSize(screemHeight,screemWidth);
     }
@@ -260,12 +266,18 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
         ButterKnife.bind(this);
         uri = getIntent().getData();
         mVideoView = findViewById(R.id.video_player);
-
-        getData();
         setListener();
+        getData();
     }
 
     private void getData() {
+        am = (AudioManager) getSystemService(AUDIO_SERVICE);
+        int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        sbVoice.setMax(maxVolume);
+        currentVol = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+        sbVoice.setProgress(currentVol);
+
+
         mVideoItems = (ArrayList<MediaItem>) getIntent().getSerializableExtra("videoList");
         position = getIntent().getIntExtra("position",0);
         if (mVideoItems !=null && mVideoItems.size()>0){
@@ -291,7 +303,45 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
         mStopPluse.setOnClickListener(this);
         mFullScreen.setOnClickListener(this);
         sbPlayPercent.setOnSeekBarChangeListener(new SeekBarListener());
+        sbVoice.setOnSeekBarChangeListener(new SeekBarVoiceListen());
+
     }
+
+    class SeekBarVoiceListen implements SeekBar.OnSeekBarChangeListener{
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+            if(fromUser){
+                upDateVol(progress,isMut);
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+            handler.removeMessages(HIDE_CONTROLLER_MSG);
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            handler.sendEmptyMessageDelayed(HIDE_CONTROLLER_MSG,4000);
+        }
+    }
+
+    private void upDateVol(int progress,boolean isMut) {
+        if (isMut)
+        {
+            am.setStreamVolume(AudioManager.STREAM_MUSIC,0,0);
+            currentVol = 0;
+//            sbVoice.setProgress(0);
+
+        }else {
+            am.setStreamVolume(AudioManager.STREAM_MUSIC,progress,0);
+            currentVol = progress;
+            sbVoice.setProgress(currentVol);
+        }
+    }
+
 
     class SeekBarListener implements SeekBar.OnSeekBarChangeListener {
 
@@ -349,7 +399,12 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
         switch (id) {
             case R.id.video_name:
                 break;
-            case R.id.iv_voice:
+            case R.id.iv_mut:
+                isMut = !isMut;
+                if(isMut)
+                {
+                    upDateVol(0,isMut);
+                }
                 break;
             case R.id.iv_info:
                 break;
@@ -372,6 +427,7 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
         handler.removeMessages(HIDE_CONTROLLER_MSG);
         handler.sendEmptyMessageDelayed(HIDE_CONTROLLER_MSG,4000);
     }
+
 
     private void stopAndPlay() {
         if (mVideoView.isPlaying()) {
@@ -410,6 +466,39 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         gestureDetector.onTouchEvent(event);
+        int curVol = 0;
+        int totolHigh = 0;
+        int totolVol = 0;
+        float startY = 0;
+        switch (event.getAction())
+        {
+            // 按下的时候记录1总音量 2总高 3当前音量
+            case MotionEvent.ACTION_DOWN:
+                handler.removeMessages(HIDE_CONTROLLER_MSG);
+                curVol = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+                totolHigh = Math.min(screemHeight,screemWidth);
+                totolVol = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                startY = event.getY();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                //声音的改变
+                int dalta = (int)((event.getY() -startY)/totolHigh)*totolVol;
+                Log.e("xie",String.valueOf(event.getY()));
+                Log.e("xie",String.valueOf(dalta));
+
+
+                int lastVol = (int) Math.min(Math.max(curVol+dalta,0),totolVol);
+                if(dalta!=0)
+                {
+                    isMut =false;
+                    upDateVol(lastVol,isMut);
+                }
+                break;
+
+            case MotionEvent.ACTION_UP:
+                handler.sendEmptyMessageAtTime(HIDE_CONTROLLER_MSG,4000);
+                break;
+        }
         return super.onTouchEvent(event);
     }
 }
