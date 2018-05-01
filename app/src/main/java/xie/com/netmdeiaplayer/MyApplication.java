@@ -2,6 +2,8 @@ package xie.com.netmdeiaplayer;
 
 import android.app.Application;
 
+import org.xutils.x;
+
 /**
  * Created by MACHENIKE on 2018/4/24.
  */
@@ -13,5 +15,12 @@ public class MyApplication extends Application {
             mInstance = new MyApplication();
         }
         return mInstance;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        x.Ext.init(this);
+        x.Ext.setDebug(BuildConfig.DEBUG);
     }
 }

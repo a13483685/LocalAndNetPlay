@@ -33,6 +33,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import xie.com.netmdeiaplayer.R;
 import xie.com.netmdeiaplayer.domain.MediaItem;
+import xie.com.netmdeiaplayer.utils.Utils;
 import xie.com.netmdeiaplayer.view.VideoView;
 
 
@@ -105,7 +106,15 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
                     sbPlayPercent.setProgress(currentPosition);
 
                     tvTime.setText(getSystemTime());
-
+                    int SecondaryProgress = 0;
+                    if(isNetUrl){
+                        int buffer =mVideoView.getBufferPercentage();
+                        int totolBufs = sbPlayPercent.getMax()*buffer;
+                        SecondaryProgress = totolBufs/100;
+                        sbPlayPercent.setSecondaryProgress(SecondaryProgress);
+                    }else {
+                        sbPlayPercent.setSecondaryProgress(0);
+                    }
                     handler.removeMessages(PRORESS);
                     handler.sendEmptyMessageDelayed(PRORESS, 1000);
                     break;
@@ -121,6 +130,7 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
     private AudioManager am;
     private boolean isMut = false;
     private int currentVol;
+    private boolean isNetUrl;
 
     private String getSystemTime() {
         SimpleDateFormat format = new SimpleDateFormat("hh:mm:ss");
@@ -283,6 +293,8 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
         if (mVideoItems !=null && mVideoItems.size()>0){
             item = mVideoItems.get(position);
             mTitleName.setText(item.getName());
+
+            isNetUrl = Utils.isNetResouce(item.getData());
             mVideoView.setVideoPath(item.getData());
         }else if (uri != null) {
             mTitleName.setText(item.getName());
@@ -458,6 +470,7 @@ public class VideoPlayAvtivity extends Activity implements View.OnClickListener 
         if(mVideoItems!=null&&mVideoItems.size()>0)
         {
             MediaItem item = mVideoItems.get(position);
+            isNetUrl = Utils.isNetResouce(item.getData());
             mVideoView.setVideoPath(item.getData());
             mTitleName.setText(item.getName());
         }

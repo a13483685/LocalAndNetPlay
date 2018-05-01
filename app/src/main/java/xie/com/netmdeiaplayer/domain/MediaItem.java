@@ -12,6 +12,24 @@ public class MediaItem implements Serializable{
     Long size ;
     String data ;
     String arist ;
+    String desc;
+    String imageUrl;
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
     public String getName() {
         return name;
@@ -61,6 +79,8 @@ public class MediaItem implements Serializable{
                 ", size=" + size +
                 ", data='" + data + '\'' +
                 ", arist='" + arist + '\'' +
+                ", desc='" + desc + '\'' +
+                ", imageUrl='" + imageUrl + '\'' +
                 '}';
     }
 }
