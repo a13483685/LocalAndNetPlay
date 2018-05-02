@@ -38,12 +38,13 @@
             android:layout_height="wrap_content"
             android:text="电影名字"
             android:textSize="18sp"
+            android:layout_marginTop="10sp"
             />
         <TextView
             android:id="@+id/net_video_desc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="30sp"
+            android:layout_marginTop="10sp"
             android:textSize="18sp"
             android:text="电影描述"
             />

@@ -68,8 +68,6 @@ public class VideoFragment extends BaseFragment {
         }
     }
 
-
-
 //    public VideoFragment(Context ctx) {
 //        this.context = ctx;
 //    }

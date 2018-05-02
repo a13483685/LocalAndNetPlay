@@ -8,6 +8,9 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
 import org.xutils.x;
 
 import java.util.List;
@@ -63,7 +66,13 @@ public class NetVideoAdapter extends BaseAdapter{
 //        holder.iv_pic.setImageResource();
         holder.net_video_name.setText(item.getName());
         holder.net_video_desc.setText(item.getDesc());
-        x.image().bind(holder.iv_pic,item.getImageUrl());
+//        x.image().bind(holder.iv_pic,item.getImageUrl());
+        Glide.with(ctx).load(item.getImageUrl())
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .error(R.drawable.video_default)
+                .placeholder(R.drawable.video_default)
+                .into(holder.iv_pic);
+
         return view;
     }
 
