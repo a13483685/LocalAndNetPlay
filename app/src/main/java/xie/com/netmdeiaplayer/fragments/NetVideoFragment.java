@@ -1,9 +1,12 @@
 package xie.com.netmdeiaplayer.fragments;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -16,12 +19,14 @@ import org.xutils.common.util.LogUtil;
 import org.xutils.http.RequestParams;
 import org.xutils.x;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import xie.com.netmdeiaplayer.R;
+import xie.com.netmdeiaplayer.activities.VideoPlayAvtivity;
 import xie.com.netmdeiaplayer.adapters.NetVideoAdapter;
 import xie.com.netmdeiaplayer.domain.MediaItem;
 import xie.com.netmdeiaplayer.utils.Constants;
@@ -129,6 +134,8 @@ public class NetVideoFragment extends BaseFragment {
 
         View view = inflater.inflate(R.layout.layout_fragment_netvideo, null);
         unbinder = ButterKnife.bind(this,view);
+
+        lv_netvideo.setOnItemClickListener(new ItemClickLisener());
         return view;
     }
 
@@ -136,5 +143,26 @@ public class NetVideoFragment extends BaseFragment {
     public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
+    }
+
+    class ItemClickLisener implements AdapterView.OnItemClickListener {
+
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+            MediaItem item = mediaItems.get(i);
+            //调取手机上的播放器
+//            Intent intent = new Intent();
+//            intent.setDataAndType(Uri.parse(item.getData()),"video/*");
+//            getContext().startActivity(intent);
+
+            //调用系统的音乐播放器
+            Intent intent = new Intent(getContext(), VideoPlayAvtivity.class);
+            intent.setDataAndType(Uri.parse(item.getData()),"video/*");
+            Bundle mBundle = new Bundle();
+            mBundle.putSerializable("videoList", (Serializable) mediaItems);
+            intent.putExtras(mBundle);
+            intent.putExtra("position",i);
+            getContext().startActivity(intent);
+        }
     }
 }
