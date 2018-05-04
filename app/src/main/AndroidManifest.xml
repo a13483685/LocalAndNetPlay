@@ -27,6 +27,7 @@
         <activity android:name=".activities.VideoPlayAvtivity"
             android:configChanges="keyboardHidden|screenSize|orientation"
             />
+        <activity android:name=".activities.MusicPlayerActivity"/>
     </application>
 
 </manifest>

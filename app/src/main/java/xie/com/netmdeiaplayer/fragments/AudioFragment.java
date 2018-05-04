@@ -2,21 +2,27 @@ package xie.com.netmdeiaplayer.fragments;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import xie.com.netmdeiaplayer.R;
+import xie.com.netmdeiaplayer.activities.MusicPlayerActivity;
+import xie.com.netmdeiaplayer.activities.VideoPlayAvtivity;
 import xie.com.netmdeiaplayer.adapters.VideoAdapter;
 import xie.com.netmdeiaplayer.domain.MediaItem;
 
@@ -61,8 +67,29 @@ public class AudioFragment extends BaseFragment {
         lv_music = view.findViewById(R.id.lv_music);
         pb_music = view.findViewById(R.id.pb_music);
         tv_music_content = view.findViewById(R.id.tv_no_music_content);
-//        lv_music.setOnItemClickListener(new VideoFragment.ItemClickLisener());
+        lv_music.setOnItemClickListener(new ItemClickLisener());
         return view;
+    }
+
+    class ItemClickLisener implements AdapterView.OnItemClickListener {
+
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+            MediaItem item = mediaItems.get(i);
+            //调取手机上的播放器
+//            Intent intent = new Intent();
+//            intent.setDataAndType(Uri.parse(item.getData()),"video/*");
+//            getContext().startActivity(intent);
+
+            //调用系统的音乐播放器
+            Intent intent = new Intent(getContext(), MusicPlayerActivity.class);
+//            intent.setDataAndType(Uri.parse(item.getData()),"video/*");
+//            Bundle mBundle = new Bundle();
+//            mBundle.putSerializable("videoList", (Serializable) mediaItems);
+//            intent.putExtras(mBundle);
+            intent.putExtra("position",i);
+            getContext().startActivity(intent);
+        }
     }
 
     public void getLocalVideoData() {
