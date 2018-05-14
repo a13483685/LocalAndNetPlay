@@ -54,15 +54,14 @@ public class MusicPlayerActivity extends Activity {
     @BindView(R.id.ll_bottom)
     LinearLayout llBottom;
 
-    int position ;
+    int position;
 
     IMusicService service = null;
     private ServiceConnection conn = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder iBinder) {
             service = IMusicService.Stub.asInterface(iBinder);
-            if (service!=null)
-            {
+            if (service != null) {
                 try {
                     service.open(position);
                 } catch (RemoteException e) {
@@ -87,14 +86,14 @@ public class MusicPlayerActivity extends Activity {
     }
 
     private void bindAndStartService() {
-        Intent intent = new Intent(MusicPlayerActivity.this,MusicService.class);
+        Intent intent = new Intent(MusicPlayerActivity.this, MusicService.class);
         intent.setAction("com.xie.service");
-        bindService(intent,conn, Context.BIND_AUTO_CREATE);
+        bindService(intent, conn, Context.BIND_AUTO_CREATE);
         startService(intent);
     }
 
     private void getData() {
-        position = getIntent().getIntExtra("position",0);
+        position = getIntent().getIntExtra("position", 0);
     }
 
     private void initView() {
@@ -113,6 +112,20 @@ public class MusicPlayerActivity extends Activity {
             case R.id.btn_audio_pre:
                 break;
             case R.id.btn_audio_start_pause:
+                if (service != null) {
+                    try {
+                        if (service.isPlaying()) {
+                            service.pause();
+                            btnAudioStartPause.setBackgroundResource(R.drawable.btn_audio_start_selector);
+                        } else {
+                            service.isPlaying();
+                            btnAudioStartPause.setBackgroundResource(R.drawable.btn_audio_pause_selector);
+                        }
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
+
                 break;
             case R.id.btn_audio_next:
                 break;

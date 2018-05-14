@@ -53,4 +53,6 @@ interface IMusicService {
 
     String getName();
 
+    boolean isPlaying();
+
 }

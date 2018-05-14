@@ -100,6 +100,11 @@ public class MusicService extends Service {
         public String getName() throws RemoteException {
             return service.getName();
         }
+
+        @Override
+        public boolean isPlaying() throws RemoteException {
+            return mediaPlayer.isPlaying();
+        }
     };
 
     @Override
@@ -139,7 +144,7 @@ public class MusicService extends Service {
      * 暂停
      */
     private void pause() {
-
+        mediaPlayer.pause();
     }
 
     /**
