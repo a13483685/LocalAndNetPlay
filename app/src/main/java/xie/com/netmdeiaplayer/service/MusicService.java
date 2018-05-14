@@ -1,19 +1,35 @@
 package xie.com.netmdeiaplayer.service;
 
 import android.app.Service;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.Cursor;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.provider.MediaStore;
+import android.widget.Toast;
+
+import java.io.IOException;
+import java.util.ArrayList;
 
 import xie.com.netmdeiaplayer.IMusicService;
+import xie.com.netmdeiaplayer.domain.MediaItem;
 
 public class MusicService extends Service {
+    private ArrayList<MediaItem> mediaItems;
+    private int position = 0;
+    private MediaItem mediaItem;
+    private MediaPlayer mediaPlayer = null;
+
     public MusicService() {
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        getLocalVideoData();
     }
 
     private IMusicService.Stub stub = new IMusicService.Stub() {
@@ -130,7 +146,7 @@ public class MusicService extends Service {
      * 播放
      */
     private void play() {
-
+        mediaPlayer.start();
     }
 
     /***
@@ -149,6 +165,29 @@ public class MusicService extends Service {
     }
 
     private void open(int position) {
+        this.position = position;
+        if(mediaItems!=null && mediaItems.size()>0)
+        {
+            mediaItem = mediaItems.get(position);
+            if(mediaPlayer!=null)
+            {
+                mediaPlayer.release();
+                mediaPlayer.reset();
+            }
+            mediaPlayer = new MediaPlayer();
+            try {
+                mediaPlayer.setDataSource(mediaItem.getData());
+                mediaPlayer.setOnPreparedListener(new MyOnPreparedListener());
+                mediaPlayer.setOnCompletionListener(new MyOnCompletionListener());
+                mediaPlayer.setOnErrorListener(new MyOnErrorListener());
+                mediaPlayer.prepareAsync();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }else {
+            Toast.makeText(this,"还没有加载完成",Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -166,5 +205,76 @@ public class MusicService extends Service {
 
     private String getName() {
         return "";
+    }
+
+
+    public void getLocalVideoData() {
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+//                MediaItem meidaItem = new MediaItem();
+                ContentResolver resolver = getContentResolver();
+                Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                String[] obj = {
+                        MediaStore.Video.Media.DISPLAY_NAME,//视频文件在sdcard中的名称
+                        MediaStore.Video.Media.DURATION,//时长
+                        MediaStore.Video.Media.SIZE,//大小
+                        MediaStore.Video.Media.DATA,//数据
+                        MediaStore.Video.Media.ARTIST//作者
+                };
+                Cursor cursor  = resolver.query(uri, obj, null, null, null);
+
+
+                if (cursor != null) {
+                    mediaItems = new ArrayList<>();
+                    while (cursor.moveToNext()) {
+                        String name = cursor.getString(0);
+                        MediaItem meidaItem = new MediaItem();
+                        meidaItem.setName(name);
+
+                        Long duration = cursor.getLong(1);
+                        meidaItem.setDuration(duration);
+
+                        Long size =cursor.getLong(2);
+                        meidaItem.setSize(size);
+
+                        String data = cursor.getString(3);
+                        meidaItem.setData(data);
+
+                        String arist = cursor.getString(4);
+                        meidaItem.setArist(arist);
+                        mediaItems.add(meidaItem);
+
+                    }
+                    cursor.close();
+                }
+            }
+        }.start();
+
+    }
+    class MyOnPreparedListener implements MediaPlayer.OnPreparedListener{
+
+        @Override
+        public void onPrepared(MediaPlayer mp) {
+            play();
+        }
+    }
+
+    class MyOnCompletionListener implements MediaPlayer.OnCompletionListener{
+
+        @Override
+        public void onCompletion(MediaPlayer mp) {
+            next();
+        }
+    }
+
+    class MyOnErrorListener implements MediaPlayer.OnErrorListener{
+
+        @Override
+        public boolean onError(MediaPlayer mp, int what, int extra) {
+            next();
+            return false;
+        }
     }
 }
