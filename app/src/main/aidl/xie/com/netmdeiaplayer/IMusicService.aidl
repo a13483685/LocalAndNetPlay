@@ -55,4 +55,8 @@ interface IMusicService {
 
     boolean isPlaying();
 
+    int getCurrentPosition();
+
+    void seekTo(int position);
+
 }

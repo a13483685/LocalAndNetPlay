@@ -1,20 +1,27 @@
 package xie.com.netmdeiaplayer.service;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.MediaStore;
+import android.support.annotation.RequiresApi;
 import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
 import xie.com.netmdeiaplayer.IMusicService;
+import xie.com.netmdeiaplayer.R;
+import xie.com.netmdeiaplayer.activities.MusicPlayerActivity;
 import xie.com.netmdeiaplayer.domain.MediaItem;
 
 public class MusicService extends Service {
@@ -22,6 +29,8 @@ public class MusicService extends Service {
     private int position = 0;
     private MediaItem mediaItem;
     private MediaPlayer mediaPlayer = null;
+    public static String open_music = "OPEN_MUSIC";;
+    private NotificationManager manager;
 
     public MusicService() {
     }
@@ -105,6 +114,16 @@ public class MusicService extends Service {
         public boolean isPlaying() throws RemoteException {
             return mediaPlayer.isPlaying();
         }
+
+        @Override
+        public int getCurrentPosition() throws RemoteException {
+            return mediaPlayer.getCurrentPosition();
+        }
+
+        @Override
+        public void seekTo(int position) throws RemoteException {
+            mediaPlayer.seekTo(position);
+        }
     };
 
     @Override
@@ -128,7 +147,7 @@ public class MusicService extends Service {
     }
 
     private int getDuration() {
-        return 0;
+        return mediaPlayer.getDuration();
     }
 
     /**
@@ -150,8 +169,22 @@ public class MusicService extends Service {
     /**
      * 播放
      */
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     private void play() {
         mediaPlayer.start();
+        //状态栏信息
+        //这部分代码还不熟悉，关于pendingIntent相关的
+        manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        Intent intent = new Intent(this, MusicPlayerActivity.class);
+        intent.putExtra("Notification",true);//区分来至状态栏
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,1,intent,PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification notification = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.notification_music_playing)
+                .setContentTitle("小x播放器")
+                .setContentIntent(pendingIntent)
+                .setContentText("正在播放："+getName())
+                .build();
+        manager.notify(1,notification);
     }
 
     /***
@@ -176,7 +209,7 @@ public class MusicService extends Service {
             mediaItem = mediaItems.get(position);
             if(mediaPlayer!=null)
             {
-                mediaPlayer.release();
+//                mediaPlayer.release();
                 mediaPlayer.reset();
             }
             mediaPlayer = new MediaPlayer();
@@ -201,7 +234,7 @@ public class MusicService extends Service {
      * @return
      */
     private String getAritist() {
-        return "";
+        return mediaItem.getArist();
     }
 
     private String getAudioPath() {
@@ -209,7 +242,7 @@ public class MusicService extends Service {
     }
 
     private String getName() {
-        return "";
+        return mediaItem.getName();
     }
 
 
@@ -263,6 +296,10 @@ public class MusicService extends Service {
         @Override
         public void onPrepared(MediaPlayer mp) {
             play();
+            Intent intent = new Intent();
+
+            intent.setAction(open_music);
+            sendBroadcast(intent);
         }
     }
 

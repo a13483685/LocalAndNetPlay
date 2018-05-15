@@ -1,12 +1,16 @@
 package xie.com.netmdeiaplayer.activities;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.view.View;
@@ -23,12 +27,14 @@ import butterknife.OnClick;
 import xie.com.netmdeiaplayer.IMusicService;
 import xie.com.netmdeiaplayer.R;
 import xie.com.netmdeiaplayer.service.MusicService;
+import xie.com.netmdeiaplayer.utils.Utils;
 
 /**
  * Created by xiezheng on 2018/5/2.
  */
 
 public class MusicPlayerActivity extends Activity {
+    private static final int CURRENT_TIME = 1;
     @BindView(R.id.iv_icon)
     ImageView ivIcon;
     @BindView(R.id.tv_artist)
@@ -54,16 +60,24 @@ public class MusicPlayerActivity extends Activity {
     @BindView(R.id.ll_bottom)
     LinearLayout llBottom;
 
+
     int position;
 
     IMusicService service = null;
+
     private ServiceConnection conn = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder iBinder) {
             service = IMusicService.Stub.asInterface(iBinder);
             if (service != null) {
                 try {
-                    service.open(position);
+                    if(!notification)
+                    {
+                        service.open(position);
+                    }else {
+
+                    }
+
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
@@ -75,14 +89,103 @@ public class MusicPlayerActivity extends Activity {
 
         }
     };
+    private MyBroadcastReceiver myBroadcastReceiver;
+    Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            int  msgNum= msg.what;
+            switch (msgNum){
+                case CURRENT_TIME:
+                    try {
+                        int currentPosition = service.getCurrentPosition();
+                        seekbarAudio.setProgress(currentPosition);
+                        tvTime.setText(Utils.getMillSeconfToHHMMSS(currentPosition)+"/"+Utils.getMillSeconfToHHMMSS(service.getDuration()));
+                        handler.removeMessages(CURRENT_TIME);
+                        handler.sendEmptyMessageDelayed(CURRENT_TIME,1000);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
+    private boolean notification;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_audioplayer);
         initView();
+        initData();
         getData();
         bindAndStartService();
+    }
+
+    private void initData() {
+        myBroadcastReceiver = new MyBroadcastReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MusicService.open_music);
+        registerReceiver(myBroadcastReceiver,intentFilter);
+    }
+
+    class MyBroadcastReceiver extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            showViewDatas();
+        }
+    }
+
+
+
+    private void showViewDatas() {
+        try {
+            tvArtist.setText(service.getAritist());
+            tvName.setText(service.getName());
+            seekbarAudio.setMax(service.getDuration());
+            seekbarAudio.setOnSeekBarChangeListener(new MyOnSeekBarChangeListener());
+            handler.sendEmptyMessage(CURRENT_TIME);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    class MyOnSeekBarChangeListener implements SeekBar.OnSeekBarChangeListener{
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if(fromUser)
+            {
+                try {
+                    service.seekTo(progress);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        handler.removeCallbacksAndMessages(null);
+        if(myBroadcastReceiver != null)
+        {
+            unregisterReceiver(myBroadcastReceiver);
+            myBroadcastReceiver = null;
+        }
+        super.onDestroy();
     }
 
     private void bindAndStartService() {
@@ -93,12 +196,16 @@ public class MusicPlayerActivity extends Activity {
     }
 
     private void getData() {
-        position = getIntent().getIntExtra("position", 0);
+        //判断是否来自状态栏的点击
+        notification = getIntent().getBooleanExtra("Notification", false);
+        if(!notification)
+        {
+            position = getIntent().getIntExtra("position", 0);
+        }
     }
 
     private void initView() {
         ButterKnife.bind(this);
-
     }
 
 
