@@ -20,6 +20,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -71,10 +72,9 @@ public class MusicPlayerActivity extends Activity {
             service = IMusicService.Stub.asInterface(iBinder);
             if (service != null) {
                 try {
-                    if(!notification)
-                    {
+                    if (!notification) {
                         service.open(position);
-                    }else {
+                    } else {
                         showViewDatas();
                     }
 
@@ -90,18 +90,18 @@ public class MusicPlayerActivity extends Activity {
         }
     };
     private MyBroadcastReceiver myBroadcastReceiver;
-    Handler handler = new Handler(){
+    Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            int  msgNum= msg.what;
-            switch (msgNum){
+            int msgNum = msg.what;
+            switch (msgNum) {
                 case CURRENT_TIME:
                     try {
                         int currentPosition = service.getCurrentPosition();
                         seekbarAudio.setProgress(currentPosition);
-                        tvTime.setText(Utils.getMillSeconfToHHMMSS(currentPosition)+"/"+Utils.getMillSeconfToHHMMSS(service.getDuration()));
+                        tvTime.setText(Utils.getMillSeconfToHHMMSS(currentPosition) + "/" + Utils.getMillSeconfToHHMMSS(service.getDuration()));
                         handler.removeMessages(CURRENT_TIME);
-                        handler.sendEmptyMessageDelayed(CURRENT_TIME,1000);
+                        handler.sendEmptyMessageDelayed(CURRENT_TIME, 1000);
                     } catch (RemoteException e) {
                         e.printStackTrace();
                     }
@@ -122,21 +122,95 @@ public class MusicPlayerActivity extends Activity {
         bindAndStartService();
     }
 
+    private void setPlayMode() {
+        try {
+            int mode = service.getPlayMode();
+            if (mode == MusicService.REPLAY_NORMAL) {
+                mode = MusicService.REPLAY_ALL;
+//                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_normal_selector);
+                Toast.makeText(MusicPlayerActivity.this,"全部循环",Toast.LENGTH_SHORT).show();
+            } else if (mode == MusicService.REPLAY_ALL) {
+                mode = MusicService.REPLAY_SINGLE;
+//                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_all_selector);
+                Toast.makeText(MusicPlayerActivity.this,"单曲循环",Toast.LENGTH_SHORT).show();
+            } else if (mode == MusicService.REPLAY_SINGLE) {
+                mode = MusicService.REPLAY_NORMAL;
+//                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_single_selector);
+                Toast.makeText(MusicPlayerActivity.this,"顺序播放",Toast.LENGTH_SHORT).show();
+            } else {
+                mode = MusicService.REPLAY_NORMAL;
+//                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_normal_selector);
+                Toast.makeText(MusicPlayerActivity.this,"顺序播放",Toast.LENGTH_SHORT).show();
+            }
+            service.setPlayMode(mode);
+            showPlayMode();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    private void showPlayMode() {
+        try {
+            int mode = service.getPlayMode();
+            if (mode == MusicService.REPLAY_NORMAL) {
+                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_normal_selector);
+                Toast.makeText(MusicPlayerActivity.this,"顺序播放",Toast.LENGTH_SHORT).show();
+            } else if (mode == MusicService.REPLAY_ALL) {
+                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_all_selector);
+                Toast.makeText(MusicPlayerActivity.this,"全部播放",Toast.LENGTH_SHORT).show();
+            } else if (mode == MusicService.REPLAY_SINGLE) {
+                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_single_selector);
+                Toast.makeText(MusicPlayerActivity.this,"单曲播放",Toast.LENGTH_SHORT).show();
+            } else {
+                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_normal_selector);
+                Toast.makeText(MusicPlayerActivity.this,"顺序播放",Toast.LENGTH_SHORT).show();
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 校验状态
+     */
+    private void checkPlayMode() {
+        try {
+            int mode = service.getPlayMode();
+            if (mode == MusicService.REPLAY_NORMAL) {
+                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_normal_selector);
+//                Toast.makeText(MusicPlayerActivity.this,"顺序播放",Toast.LENGTH_SHORT).show();
+            } else if (mode == MusicService.REPLAY_ALL) {
+                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_all_selector);
+//                Toast.makeText(MusicPlayerActivity.this,"全部播放",Toast.LENGTH_SHORT).show();
+            } else if (mode == MusicService.REPLAY_SINGLE) {
+                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_single_selector);
+//                Toast.makeText(MusicPlayerActivity.this,"单曲播放",Toast.LENGTH_SHORT).show();
+            } else {
+                btnAudioPlaymode.setBackgroundResource(R.drawable.btn_audio_playmode_normal_selector);
+//                Toast.makeText(MusicPlayerActivity.this,"顺序播放",Toast.LENGTH_SHORT).show();
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void initData() {
         myBroadcastReceiver = new MyBroadcastReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(MusicService.open_music);
-        registerReceiver(myBroadcastReceiver,intentFilter);
+        registerReceiver(myBroadcastReceiver, intentFilter);
     }
 
-    class MyBroadcastReceiver extends BroadcastReceiver{
+    class MyBroadcastReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             showViewDatas();
+            checkPlayMode();
         }
     }
-
 
 
     private void showViewDatas() {
@@ -151,12 +225,11 @@ public class MusicPlayerActivity extends Activity {
         }
     }
 
-    class MyOnSeekBarChangeListener implements SeekBar.OnSeekBarChangeListener{
+    class MyOnSeekBarChangeListener implements SeekBar.OnSeekBarChangeListener {
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            if(fromUser)
-            {
+            if (fromUser) {
                 try {
                     service.seekTo(progress);
                 } catch (RemoteException e) {
@@ -180,8 +253,7 @@ public class MusicPlayerActivity extends Activity {
     @Override
     protected void onDestroy() {
         handler.removeCallbacksAndMessages(null);
-        if(myBroadcastReceiver != null)
-        {
+        if (myBroadcastReceiver != null) {
             unregisterReceiver(myBroadcastReceiver);
             myBroadcastReceiver = null;
         }
@@ -198,8 +270,7 @@ public class MusicPlayerActivity extends Activity {
     private void getData() {
         //判断是否来自状态栏的点击
         notification = getIntent().getBooleanExtra("Notification", false);
-        if(!notification)
-        {
+        if (!notification) {
             position = getIntent().getIntExtra("position", 0);
         }
     }
@@ -215,6 +286,7 @@ public class MusicPlayerActivity extends Activity {
             case R.id.iv_icon:
                 break;
             case R.id.btn_audio_playmode:
+                setPlayMode();
                 break;
             case R.id.btn_audio_pre:
                 break;

@@ -23,6 +23,7 @@ import xie.com.netmdeiaplayer.IMusicService;
 import xie.com.netmdeiaplayer.R;
 import xie.com.netmdeiaplayer.activities.MusicPlayerActivity;
 import xie.com.netmdeiaplayer.domain.MediaItem;
+import xie.com.netmdeiaplayer.utils.Utils;
 
 public class MusicService extends Service {
     private ArrayList<MediaItem> mediaItems;
@@ -31,6 +32,12 @@ public class MusicService extends Service {
     private MediaPlayer mediaPlayer = null;
     public static String open_music = "OPEN_MUSIC";;
     private NotificationManager manager;
+    public static int REPLAY_NORMAL = 0;
+    public static int REPLAY_REPLAY = 1;
+    public static int REPLAY_ALL = 2;
+    public static int REPLAY_SINGLE = 3;
+    private int mode = 0;
+
 
     public MusicService() {
     }
@@ -39,6 +46,7 @@ public class MusicService extends Service {
     public void onCreate() {
         super.onCreate();
         getLocalVideoData();
+        mode = Utils.getPlayMode(this);
     }
 
     private IMusicService.Stub stub = new IMusicService.Stub() {
@@ -70,6 +78,7 @@ public class MusicService extends Service {
             service.pause();
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
         @Override
         public void play() throws RemoteException {
             service.play();
@@ -192,11 +201,12 @@ public class MusicService extends Service {
      * @param mode
      */
     private void setPlayMode(int mode) {
-
+        this.mode = mode;
+        Utils.putPlayMode(this,"playMode",this.mode);
     }
 
     private int getPlayMode() {
-        return 0;
+        return Utils.getPlayMode(this);
     }
 
     private void stop() {
@@ -295,7 +305,10 @@ public class MusicService extends Service {
 
         @Override
         public void onPrepared(MediaPlayer mp) {
-            play();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                play();
+            }
+
             Intent intent = new Intent();
 
             intent.setAction(open_music);
