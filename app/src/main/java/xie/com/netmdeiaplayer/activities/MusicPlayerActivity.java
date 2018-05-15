@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.Button;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import xie.com.netmdeiaplayer.IMusicService;
 import xie.com.netmdeiaplayer.R;
 import xie.com.netmdeiaplayer.service.MusicService;
 
@@ -52,11 +54,20 @@ public class MusicPlayerActivity extends Activity {
     @BindView(R.id.ll_bottom)
     LinearLayout llBottom;
 
-    int position ;
+    int position;
+
+    IMusicService service = null;
     private ServiceConnection conn = new ServiceConnection() {
         @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-
+        public void onServiceConnected(ComponentName name, IBinder iBinder) {
+            service = IMusicService.Stub.asInterface(iBinder);
+            if (service != null) {
+                try {
+                    service.open(position);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         @Override
@@ -75,12 +86,14 @@ public class MusicPlayerActivity extends Activity {
     }
 
     private void bindAndStartService() {
-        Intent intent = new Intent(MusicPlayerActivity.this,MusicService.class);
-        bindService(intent,conn, Context.BIND_AUTO_CREATE);
+        Intent intent = new Intent(MusicPlayerActivity.this, MusicService.class);
+        intent.setAction("com.xie.service");
+        bindService(intent, conn, Context.BIND_AUTO_CREATE);
+        startService(intent);
     }
 
     private void getData() {
-        position = getIntent().getIntExtra("position",0);
+        position = getIntent().getIntExtra("position", 0);
     }
 
     private void initView() {
@@ -99,6 +112,20 @@ public class MusicPlayerActivity extends Activity {
             case R.id.btn_audio_pre:
                 break;
             case R.id.btn_audio_start_pause:
+                if (service != null) {
+                    try {
+                        if (service.isPlaying()) {
+                            service.pause();
+                            btnAudioStartPause.setBackgroundResource(R.drawable.btn_audio_start_selector);
+                        } else {
+                            service.isPlaying();
+                            btnAudioStartPause.setBackgroundResource(R.drawable.btn_audio_pause_selector);
+                        }
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
+
                 break;
             case R.id.btn_audio_next:
                 break;

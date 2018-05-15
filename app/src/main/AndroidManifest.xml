@@ -31,7 +31,11 @@
         <service
             android:name=".service.MusicService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true">
+            <intent-filter >
+                <action android:name="com.xie.service"/>
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
