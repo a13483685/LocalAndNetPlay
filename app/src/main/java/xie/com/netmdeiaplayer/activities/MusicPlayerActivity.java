@@ -75,7 +75,7 @@ public class MusicPlayerActivity extends Activity {
                     {
                         service.open(position);
                     }else {
-
+                        showViewDatas();
                     }
 
                 } catch (RemoteException e) {

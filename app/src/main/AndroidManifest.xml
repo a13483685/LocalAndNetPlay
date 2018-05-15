@@ -26,7 +26,7 @@
         <activity
             android:name=".activities.VideoPlayAvtivity"
             android:configChanges="keyboardHidden|screenSize|orientation" />
-        <activity android:name=".activities.MusicPlayerActivity" />
+        <activity android:name=".activities.MusicPlayerActivity" android:launchMode="singleTask"/>
 
         <service
             android:name=".service.MusicService"
