@@ -1,7 +1,12 @@
 package xie.com.netmdeiaplayer;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -35,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private NetAudioFragment netAudioFragment;
     private NetVideoFragment netVideoFragment;
     private VideoFragment videoFragment;
-
+    private static final int PERMISSION_REQUESTCODE = 1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,7 +60,20 @@ public class MainActivity extends AppCompatActivity {
         fragments.add(videoFragment);
     }
 
+    private void permission() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            //没有授权
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUESTCODE);
+        }
+    }
+
+
     private void initData() {
+        if(Build.VERSION.SDK_INT >=Build.VERSION_CODES.M){
+            permission();//动态权限认证
+        }
+
+
 
         vp.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
             @Override

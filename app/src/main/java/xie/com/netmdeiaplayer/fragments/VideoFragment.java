@@ -61,22 +61,10 @@ public class VideoFragment extends BaseFragment {
         }
     };
 
-    private void permission() {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            //没有授权
-            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUESTCODE);
-        }
-    }
-
-//    public VideoFragment(Context ctx) {
 //        this.context = ctx;
 //    }
-
     @Override
     protected void initData() {
-        if(Build.VERSION.SDK_INT >=Build.VERSION_CODES.M){
-            permission();//动态权限认证
-        }
         getLocalVideoData();
     }
 

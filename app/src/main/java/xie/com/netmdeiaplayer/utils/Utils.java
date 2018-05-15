@@ -1,5 +1,10 @@
 package xie.com.netmdeiaplayer.utils;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+
 /**
  * Created by xiezheng on 2018/5/1.
  */
