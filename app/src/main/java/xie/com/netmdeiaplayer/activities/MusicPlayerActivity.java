@@ -289,6 +289,13 @@ public class MusicPlayerActivity extends Activity {
                 setPlayMode();
                 break;
             case R.id.btn_audio_pre:
+                if(service!=null) {
+                    try {
+                        service.pre();
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
                 break;
             case R.id.btn_audio_start_pause:
                 if (service != null) {
@@ -297,7 +304,7 @@ public class MusicPlayerActivity extends Activity {
                             service.pause();
                             btnAudioStartPause.setBackgroundResource(R.drawable.btn_audio_start_selector);
                         } else {
-                            service.isPlaying();
+                            service.play();
                             btnAudioStartPause.setBackgroundResource(R.drawable.btn_audio_pause_selector);
                         }
                     } catch (RemoteException e) {
@@ -307,6 +314,13 @@ public class MusicPlayerActivity extends Activity {
 
                 break;
             case R.id.btn_audio_next:
+                if (service!=null){
+                    try {
+                        service.next();
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
                 break;
         }
     }

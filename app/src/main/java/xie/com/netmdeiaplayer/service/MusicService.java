@@ -30,12 +30,12 @@ public class MusicService extends Service {
     private int position = 0;
     private MediaItem mediaItem;
     private MediaPlayer mediaPlayer = null;
-    public static String open_music = "OPEN_MUSIC";;
+    public static String open_music = "OPEN_MUSIC";
+    ;
     private NotificationManager manager;
     public static int REPLAY_NORMAL = 0;
-    public static int REPLAY_REPLAY = 1;
-    public static int REPLAY_ALL = 2;
-    public static int REPLAY_SINGLE = 3;
+    public static int REPLAY_ALL = 1;
+    public static int REPLAY_SINGLE = 2;
     private int mode = 0;
 
 
@@ -145,14 +145,43 @@ public class MusicService extends Service {
      * 上一曲
      */
     private void pre() {
+        int mode = getPlayMode();
+        if (mode == MusicService.REPLAY_NORMAL) {
+            position--;
+            if (position < 0)
+                position = mediaItems.size()-1;
 
+        } else if (mode == MusicService.REPLAY_ALL) {
+            position--;
+            if (position < 0)
+                position = mediaItems.size()-1;
+        } else if (mode == MusicService.REPLAY_SINGLE) {
+            position = position;
+        }
+        open(position);
     }
 
     /**
      * 下一曲
      */
     private void next() {
-
+        int mode = getPlayMode();
+        if (mode == MusicService.REPLAY_NORMAL) {
+            position++;
+            if (position < mediaItems.size()) {
+            } else {
+                position = 0;
+            }
+        } else if (mode == MusicService.REPLAY_ALL) {
+            position++;
+            if (position < mediaItems.size()) {
+            } else {
+                position = 0;
+            }
+        } else if (mode == MusicService.REPLAY_SINGLE) {
+            position = position;
+        }
+        open(position);
     }
 
     private int getDuration() {
@@ -185,15 +214,15 @@ public class MusicService extends Service {
         //这部分代码还不熟悉，关于pendingIntent相关的
         manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         Intent intent = new Intent(this, MusicPlayerActivity.class);
-        intent.putExtra("Notification",true);//区分来至状态栏
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,1,intent,PendingIntent.FLAG_UPDATE_CURRENT);
+        intent.putExtra("Notification", true);//区分来至状态栏
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notification = new Notification.Builder(this)
                 .setSmallIcon(R.drawable.notification_music_playing)
                 .setContentTitle("小x播放器")
                 .setContentIntent(pendingIntent)
-                .setContentText("正在播放："+getName())
+                .setContentText("正在播放：" + getName())
                 .build();
-        manager.notify(1,notification);
+        manager.notify(1, notification);
     }
 
     /***
@@ -202,7 +231,12 @@ public class MusicService extends Service {
      */
     private void setPlayMode(int mode) {
         this.mode = mode;
-        Utils.putPlayMode(this,"playMode",this.mode);
+        Utils.putPlayMode(this, "playMode", this.mode);
+        if (mode == MusicService.REPLAY_SINGLE) {
+            mediaPlayer.setLooping(true);
+        }else {
+            mediaPlayer.setLooping(false);
+        }
     }
 
     private int getPlayMode() {
@@ -214,11 +248,9 @@ public class MusicService extends Service {
 
     private void open(int position) {
         this.position = position;
-        if(mediaItems!=null && mediaItems.size()>0)
-        {
+        if (mediaItems != null && mediaItems.size() > 0) {
             mediaItem = mediaItems.get(position);
-            if(mediaPlayer!=null)
-            {
+            if (mediaPlayer != null) {
 //                mediaPlayer.release();
                 mediaPlayer.reset();
             }
@@ -233,8 +265,8 @@ public class MusicService extends Service {
                 e.printStackTrace();
             }
 
-        }else {
-            Toast.makeText(this,"还没有加载完成",Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "还没有加载完成", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -271,7 +303,7 @@ public class MusicService extends Service {
                         MediaStore.Video.Media.DATA,//数据
                         MediaStore.Video.Media.ARTIST//作者
                 };
-                Cursor cursor  = resolver.query(uri, obj, null, null, null);
+                Cursor cursor = resolver.query(uri, obj, null, null, null);
 
 
                 if (cursor != null) {
@@ -284,7 +316,7 @@ public class MusicService extends Service {
                         Long duration = cursor.getLong(1);
                         meidaItem.setDuration(duration);
 
-                        Long size =cursor.getLong(2);
+                        Long size = cursor.getLong(2);
                         meidaItem.setSize(size);
 
                         String data = cursor.getString(3);
@@ -301,7 +333,8 @@ public class MusicService extends Service {
         }.start();
 
     }
-    class MyOnPreparedListener implements MediaPlayer.OnPreparedListener{
+
+    class MyOnPreparedListener implements MediaPlayer.OnPreparedListener {
 
         @Override
         public void onPrepared(MediaPlayer mp) {
@@ -316,7 +349,7 @@ public class MusicService extends Service {
         }
     }
 
-    class MyOnCompletionListener implements MediaPlayer.OnCompletionListener{
+    class MyOnCompletionListener implements MediaPlayer.OnCompletionListener {
 
         @Override
         public void onCompletion(MediaPlayer mp) {
@@ -324,7 +357,7 @@ public class MusicService extends Service {
         }
     }
 
-    class MyOnErrorListener implements MediaPlayer.OnErrorListener{
+    class MyOnErrorListener implements MediaPlayer.OnErrorListener {
 
         @Override
         public boolean onError(MediaPlayer mp, int what, int extra) {
