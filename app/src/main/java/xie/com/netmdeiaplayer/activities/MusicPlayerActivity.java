@@ -257,6 +257,12 @@ public class MusicPlayerActivity extends Activity {
             unregisterReceiver(myBroadcastReceiver);
             myBroadcastReceiver = null;
         }
+
+        if(service!=null)
+        {
+            unbindService(conn);
+            conn = null;
+        }
         super.onDestroy();
     }
 
